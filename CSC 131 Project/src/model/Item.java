@@ -1,4 +1,5 @@
 package model;
+import java.util.Scanner;
 
 public class Item {
 	/*  Attributes  */
@@ -14,6 +15,20 @@ public class Item {
 		this.price = price;
 	}
 	
+	public static Item inputItem() {
+		Scanner scanner = new Scanner(System.in);
+		
+		System.out.print("Enter item name: ");
+        String name = scanner.nextLine();
+
+        System.out.print("Enter quantity: ");
+        int count = scanner.nextInt();
+
+        System.out.print("Enter price: ");
+        double price = scanner.nextDouble();
+
+        return new Item(name, count, price);
+	}
 	
 	/*  Getter Methods */
 	public String getName() {
