@@ -2,19 +2,23 @@ package model;
 import java.util.Date;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class Receipt {
 	private int receiptID;
 	private User owner;
 	private List<Item> items;
 	private double total;
-	private Date date;
+	private String date;
+	private String name;
 	
-	public Receipt(User owner, List<Item> items, double total) {
+	public Receipt(User owner, List<Item> items, double total, String name, String date) {
 		this.owner = owner;
 		this.items = new ArrayList<>();
 		this.total = total;
-		this.date = new Date();
+		this.name = name;
+		this.date = date;
+		this.receiptID = new Random().nextInt(900000) + 100000;
 	}
 	public void add(Item item) {
 		this.items.add(item);
@@ -46,4 +50,13 @@ public class Receipt {
 		}
 		return sum;
 	}
+	
+	public String getName() {
+		return name;
+	}
+	
+	public String getDate() {
+		return date;
+	}
+	
 }

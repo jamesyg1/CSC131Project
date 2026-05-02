@@ -7,7 +7,6 @@ public class UserInfo {
 	
 	UserInfo(){
 		
-		loginInfo.put("James", "CSC131");
 	}
 	
 	protected HashMap getLoginInfo(){

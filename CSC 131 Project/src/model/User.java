@@ -27,11 +27,11 @@ public class User {
 		return email;
 	}
 	
-	public String password() {
+	public String getPassword() {
 		return password;
 	}
 	
-	public String name() {
+	public String getName() {
 		return name;
 	}
 

@@ -22,10 +22,9 @@ public class ReceiptService {
         return 100000 + random.nextInt(900000);
     }
 
-    public Receipt createReceipt(User owner) {
-        Receipt receipt = new Receipt(owner, new ArrayList<Item>(), 0.0);
+    public Receipt createReceipt(User owner, List<Item> items, String name, String date) {
+        Receipt receipt = new Receipt(owner, items, 0.0, name, date);
         receipts.add(receipt);
-        generateReceiptID(); // generated for tracking/future use
         return receipt;
     }
 
