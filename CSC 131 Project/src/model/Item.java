@@ -28,6 +28,7 @@ public class Item {
         double price = scanner.nextDouble();
 
         return new Item(name, count, price);
+        
 	}
 	
 	/*  Getter Methods */
