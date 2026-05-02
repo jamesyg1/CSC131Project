@@ -12,7 +12,7 @@ public class Receipt {
 	
 	public Receipt(User owner, List<Item> items, double total) {
 		this.owner = owner;
-		this.items = new ArrayList<>();
+		this.items = new ArrayList<>(items);
 		this.total = total;
 		this.date = new Date();
 	}
