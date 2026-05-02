@@ -11,6 +11,7 @@ import javax.swing.JPasswordField;
 import javax.swing.JLabel;
 
 import model.User;
+import model.UserFactory;
 
 public class RegisterPage implements ActionListener {
 
@@ -100,7 +101,7 @@ public class RegisterPage implements ActionListener {
             
             //Redirects to login page after account is created
             int newID = loginInfo.size() + 1;
-            loginInfo.put(name, new User(newID, email, password, name));
+            loginInfo.put(name, UserFactory.createUser(newID, email, password, name));
             messageLabel.setForeground(Color.GREEN);
             messageLabel.setText("Registration successful!");
             frame.dispose();
