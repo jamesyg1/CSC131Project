@@ -12,7 +12,7 @@ class UserTest {
 
         assertEquals(1, user.getUserID());
         assertEquals("test@email.com", user.getEmail());
-        assertEquals("pass123", user.password());
-        assertEquals("John", user.name());
+        assertEquals("pass123", user.getPassword());
+        assertEquals("John", user.getName());
     }
 }

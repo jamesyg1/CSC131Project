@@ -46,7 +46,7 @@ public class Receipt {
 	public double itemSum() {
 		double sum = 0;
 		for(Item item: items) {
-			sum+= item.getPrice();
+			sum+= item.getPrice() * item.getCount();
 		}
 		return sum;
 	}
