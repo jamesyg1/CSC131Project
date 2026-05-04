@@ -1,5 +1,6 @@
 package ui;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashMap;
@@ -19,7 +20,7 @@ public class LoginPage implements ActionListener{
 	JButton registerButton = new JButton("Register");
 	JTextField userIDField = new JTextField();
 	JPasswordField userPassword = new JPasswordField();
-	JLabel userIDLabel = new JLabel("Email:");
+	JLabel userIDLabel = new JLabel("Email/Username:");
 	JLabel userPasswordLabel = new JLabel("Password:");
 	JLabel messageLabel = new JLabel();
 	HashMap<String,User> loginInfo = new HashMap<String,User>();
@@ -28,14 +29,15 @@ public class LoginPage implements ActionListener{
 		
 		//Button layouts
 		loginInfo = loginInfoOriginal;
-		userIDLabel.setBounds(50,100,75,25);
-		userPasswordLabel.setBounds(50,150,75,25);
-		userIDField.setBounds(125,100,200,25);
-		userPassword.setBounds(125,150,200,25);
-		loginButton.setBounds(225,200,100,25);
+		userIDLabel.setBounds(80, 160, 150, 25);
+		userPasswordLabel.setBounds(80, 220, 75, 25);
+		userIDField.setBounds(80, 185, 340, 35);
+		userPassword.setBounds(80, 245, 340, 35);
+		loginButton.setBounds(270, 310, 120, 35);
 		loginButton.addActionListener(this);
-		messageLabel.setBounds(100, 250, 300, 35);
-		registerButton.setBounds(115, 200, 100, 25);
+		messageLabel.setBounds(80, 360, 340, 25);
+        messageLabel.setFont(new Font("Arial", Font.BOLD, 14));
+		registerButton.setBounds(110, 310, 120, 35);
 		registerButton.addActionListener(this);
 		
 		//Buttons added onto frame
@@ -47,49 +49,43 @@ public class LoginPage implements ActionListener{
 		frame.add(loginButton);
 		frame.add(messageLabel);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setSize(420,420);
+		frame.setSize(500,600);
 		frame.setLayout(null);
 		frame.setVisible(true);
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
-		
-		if(e.getSource() == loginButton) {
-			
-			String userID = userIDField.getText();
-			String password = String.valueOf(userPassword.getPassword());
-			 
-			//Checks if user exists
-			if(loginInfo.containsKey(userID)) {
-				
-				//Account exists and valid, redirect to main page
-				if(loginInfo.get(userID).getPassword().equals(password)) {
-					messageLabel.setForeground(Color.GREEN);
-					messageLabel.setText("Login Sucessful");
-					frame.dispose();
-					User curUser = loginInfo.get(userID);
-					ReceiptPage mainPage = new ReceiptPage(curUser);
+	public void actionPerformed(ActionEvent e){
 
-				}
-				//Incorrect password
-				else { 
-					messageLabel.setForeground(Color.RED);
-					messageLabel.setText("Invalid password. Please try again.");					
-				}
-			//Incorrect email or password
-			} else {
-				messageLabel.setForeground(Color.RED);
-				messageLabel.setText("Invalid email or password. Please try again.");
-				
-			}
-		}
-		
-		//Redirect to register page when button is clicked
-		if (e.getSource() == registerButton) {
-		    frame.dispose();
-		    RegisterPage registerPage = new RegisterPage(loginInfo);
-		}
+	    if (e.getSource() == loginButton){
+
+	        String userID = userIDField.getText();
+	        String password = String.valueOf(userPassword.getPassword());
+
+	        User matchedUser = null;
+
+	        for (User user : loginInfo.values()){
+	            if ((user.getName().equals(userID) || user.getEmail().equals(userID)) && user.getPassword().equals(password)) {
+	                matchedUser = user;
+	                break;
+	            }
+	        }
+
+	        if (matchedUser != null){
+	            messageLabel.setForeground(Color.GREEN);
+	            messageLabel.setText("Login Successful");
+	            frame.dispose();
+	            new ReceiptPage(matchedUser);
+	        } else {
+	            messageLabel.setForeground(Color.RED);
+	            messageLabel.setText("Invalid email/username or password.");
+	        }
+	    }
+
+	    if (e.getSource() == registerButton){
+	        frame.dispose();
+	        new RegisterPage(loginInfo);
+	    }
 		
 	}
 	

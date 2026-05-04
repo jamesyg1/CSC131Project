@@ -11,7 +11,7 @@ public class UserInfo {
 	}
 	
 	/* Singleton Design Pattern */
-	public static UserInfo getInstance() {
+	public static UserInfo getInstance(){
         if (instance == null) {
             instance = new UserInfo();
         }

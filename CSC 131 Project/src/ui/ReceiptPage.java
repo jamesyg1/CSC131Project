@@ -13,7 +13,7 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ReceiptPage implements ActionListener {
+public class ReceiptPage implements ActionListener{
 
     JFrame frame = new JFrame();
     JTextField searchField = new JTextField();
@@ -24,7 +24,7 @@ public class ReceiptPage implements ActionListener {
     List<Receipt> allReceipts = new ArrayList<>();
     User currentUser;
 
-    ReceiptPage(User user) {
+    ReceiptPage(User user){
         this.currentUser = user;
 
         searchButton.addActionListener(this);
@@ -53,21 +53,22 @@ public class ReceiptPage implements ActionListener {
     }
 
     @Override
-    public void actionPerformed(ActionEvent e) {
-    	if (e.getSource() == addButton) {
+    public void actionPerformed(ActionEvent e){
+    	
+    	if (e.getSource() == addButton){
             showAddDialog();
         }
     	
-    	if (e.getSource() == searchButton) {
+    	if (e.getSource() == searchButton){
     	    String query = searchField.getText().trim().toLowerCase();
-    	    if (query.isEmpty()) {
+    	    if (query.isEmpty()){
     	        refreshList(allReceipts);
     	        return;
     	    }
     	    List<Receipt> filtered = new ArrayList<>();
     	    for (Receipt r : allReceipts) {
     	        if (r.getName().toLowerCase().contains(query) ||
-    	            String.valueOf(r.getReceiptID()).contains(query)) {
+    	            String.valueOf(r.getReceiptID()).contains(query)){
     	            filtered.add(r);
     	        }
     	    }
@@ -76,7 +77,7 @@ public class ReceiptPage implements ActionListener {
     	
     }
     
-    void showAddDialog() {
+    void showAddDialog(){
 
         JDialog dialog = new JDialog(frame, "New Receipt", true);
         dialog.setSize(380, 420);
@@ -122,7 +123,7 @@ public class ReceiptPage implements ActionListener {
             String itemsText = itemsArea.getText().trim();
 
             //Checks for empty fields
-            if (name.isEmpty() || date.isEmpty() || itemsText.isEmpty()) {
+            if (name.isEmpty() || date.isEmpty() || itemsText.isEmpty()){
                 messageLabel.setText("All fields are required.");
                 return;
             }
@@ -137,7 +138,7 @@ public class ReceiptPage implements ActionListener {
                 }
                 
                 //Converts the values to proper type
-                try {
+                try{
                     itemList.add(new Item(parts[0].trim(), Integer.parseInt(parts[1].trim()), Double.parseDouble(parts[2].trim())));
                 //Error message if conversion fails
                 } catch (NumberFormatException ex) {
@@ -150,7 +151,7 @@ public class ReceiptPage implements ActionListener {
             Receipt receipt = receiptService.createReceipt(currentUser, new ArrayList<>(), name, date);
             
             //Add items to receipt
-            for (Item item : itemList) {
+            for (Item item : itemList){
                 receiptService.addItemToReceipt(receipt, item);
             }
             
@@ -166,11 +167,11 @@ public class ReceiptPage implements ActionListener {
     
     
     /* Refreshes page when searching or adding receipts */
-    void refreshList(List<Receipt> receipts) {
+    void refreshList(List<Receipt> receipts){
 
         listPanel.removeAll();
 
-        for (Receipt r : receipts) {
+        for (Receipt r : receipts){
 
         	//Creates a card for each receipt
             JPanel card = new JPanel();
@@ -185,7 +186,7 @@ public class ReceiptPage implements ActionListener {
 
             //Add item summary to receipt
             String itemNames = "";
-            for (Item item : r.getItems()) {
+            for (Item item : r.getItems()){
                 itemNames += item.getName() + " x" + item.getCount() + "  ";
             }
             JLabel itemsLabel = new JLabel("Items: " + itemNames);

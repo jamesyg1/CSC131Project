@@ -9,6 +9,7 @@ import javax.swing.JButton;
 import javax.swing.JTextField;
 import javax.swing.JPasswordField;
 import javax.swing.JLabel;
+import java.awt.Font;
 
 import model.User;
 import model.UserFactory;
@@ -21,7 +22,7 @@ public class RegisterPage implements ActionListener {
     JTextField emailField = new JTextField();
     JPasswordField passwordField = new JPasswordField();
     JPasswordField confirmPasswordField = new JPasswordField();
-    JLabel nameLabel = new JLabel("Name:");
+    JLabel nameLabel = new JLabel("Username:");
     JLabel emailLabel = new JLabel("Email:");
     JLabel passwordLabel = new JLabel("Password:");
     JLabel confirmPasswordLabel = new JLabel("Confirm Password:");
@@ -35,19 +36,22 @@ public class RegisterPage implements ActionListener {
         this.loginInfo = loginInfo;
 
         //Button layouts
-        nameLabel.setBounds(50, 80, 120, 25);
-        emailLabel.setBounds(50, 120, 120, 25);
-        passwordLabel.setBounds(50, 160, 120, 25);
-        confirmPasswordLabel.setBounds(50, 200, 120, 25);
-        nameField.setBounds(175, 80, 200, 25);
-        emailField.setBounds(175, 120, 200, 25);
-        passwordField.setBounds(175, 160, 200, 25);
-        confirmPasswordField.setBounds(175, 200, 200, 25);
-        registerButton.setBounds(225, 250, 100, 25);
+        nameLabel.setBounds(80, 80, 120, 25);
+        nameField.setBounds(80, 108, 340, 35);
+        emailLabel.setBounds(80, 165, 120, 25);
+        emailField.setBounds(80, 193, 340, 35);
+        passwordLabel.setBounds(80, 250, 120, 25);
+        passwordField.setBounds(80, 278, 340, 35);
+        confirmPasswordLabel.setBounds(80, 335, 120, 25);
+        confirmPasswordField.setBounds(80, 363, 340, 35);
+        registerButton.setBounds(270, 430, 120, 35);
+        backButton.setBounds(110, 430, 120, 35);
+        messageLabel.setBounds(80, 475, 340, 25);
+        messageLabel.setFont(new Font("Arial", Font.BOLD, 14));
         registerButton.addActionListener(this);
-        backButton.setBounds(100, 250, 100, 25);
         backButton.addActionListener(this);
-        messageLabel.setBounds(100, 290, 300, 35);
+        
+
 
         //Add buttons to the frame
         frame.add(backButton);
@@ -63,15 +67,15 @@ public class RegisterPage implements ActionListener {
         frame.add(messageLabel);
         frame.add(backButton);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(420, 420);
+        frame.setSize(500, 600);
         frame.setLayout(null);
         frame.setVisible(true);
     }
 
     @Override
-    public void actionPerformed(ActionEvent e) {
+    public void actionPerformed(ActionEvent e){
 
-        if (e.getSource() == registerButton) {
+        if (e.getSource() == registerButton){
 
             String name = nameField.getText().trim();
             String email = emailField.getText().trim();
@@ -79,21 +83,28 @@ public class RegisterPage implements ActionListener {
             String confirmPassword = String.valueOf(confirmPasswordField.getPassword());
 
             //User needs to fill in all the inputs
-            if (name.isEmpty() || email.isEmpty() || password.isEmpty()) {
+            if (name.isEmpty() || email.isEmpty() || password.isEmpty()){
                 messageLabel.setForeground(Color.RED);
                 messageLabel.setText("All fields are required.");
                 return;
             }
+            
+            //Email has to contain an @
+            if (!email.contains("@")){
+                messageLabel.setForeground(Color.RED);
+                messageLabel.setText("Please enter a valid email.");
+                return;
+            }
 
             //Checks if the password and confirm password are the same
-            if (!password.equals(confirmPassword)) {
+            if (!password.equals(confirmPassword)){
                 messageLabel.setForeground(Color.RED);
                 messageLabel.setText("Passwords do not match. Please try again.");
                 return;
             }
 
             //Checks if the username exist already
-            if (loginInfo.containsKey(name)) {
+            if (loginInfo.containsKey(name)){
                 messageLabel.setForeground(Color.RED);
                 messageLabel.setText("Username already exists.");
                 return;
@@ -109,7 +120,7 @@ public class RegisterPage implements ActionListener {
         }
         
         //Goes back to login page from register page
-        if (e.getSource() == backButton) {
+        if (e.getSource() == backButton){
             frame.dispose();
             new LoginPage(loginInfo);
         }
