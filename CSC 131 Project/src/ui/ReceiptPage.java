@@ -1,15 +1,16 @@
 package ui;
 
-import model.User;
+import model.User; 
 import model.Item;
 import model.Receipt;
 import service.ReceiptService;
+import ui.UserInfo; 
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.ActionListener;	
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,6 +20,7 @@ public class ReceiptPage implements ActionListener{
     JTextField searchField = new JTextField();
     JButton searchButton = new JButton("Search");
     JButton addButton = new JButton("+ Add Receipt");
+    JButton logoutButton = new JButton("Logout");
     JPanel listPanel = new JPanel();
     ReceiptService receiptService = new ReceiptService();
     List<Receipt> allReceipts = new ArrayList<>();
@@ -41,6 +43,10 @@ public class ReceiptPage implements ActionListener{
         bottom.setBorder(new EmptyBorder(5, 10, 5, 10));
         addButton.setPreferredSize(new Dimension(460, 40));
         bottom.add(addButton);
+        
+        logoutButton.setPreferredSize(new Dimension(90, 30));
+        logoutButton.addActionListener(this);
+        top.add(logoutButton, BorderLayout.WEST);
 
         frame.setTitle("Receipts - " + user.getName());
         frame.setSize(500, 600);
@@ -75,6 +81,11 @@ public class ReceiptPage implements ActionListener{
     	    refreshList(filtered);
     	}
     	
+    	if (e.getSource() == logoutButton) {
+    	    frame.dispose();
+    	    new LoginPage(UserInfo.getInstance().getLoginInfo());
+    	}
+    	
     }
     
     void showAddDialog(){
@@ -101,8 +112,8 @@ public class ReceiptPage implements ActionListener{
         itemsLabel.setBounds(20, 140, 200, 25);
         itemsArea.setBounds(20, 165, 330, 120);
         messageLabel.setBounds(20, 295, 330, 25);
-        submitButton.setBounds(120, 330, 150, 30);
-
+        submitButton.setBounds(115, 330, 150, 30);
+        
         messageLabel.setForeground(Color.RED);
         itemsArea.setBorder(BorderFactory.createLineBorder(Color.GRAY));
 
