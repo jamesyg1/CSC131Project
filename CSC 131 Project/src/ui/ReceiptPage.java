@@ -12,6 +12,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
+import service.DatabaseService;
 
 public class ReceiptPage implements ActionListener{
 
@@ -26,6 +27,8 @@ public class ReceiptPage implements ActionListener{
 
     ReceiptPage(User user){
         this.currentUser = user;
+        allReceipts = DatabaseService.getInstance().loadReceiptsForUser(user);
+        refreshList(allReceipts);
 
         searchButton.addActionListener(this);
         addButton.addActionListener(this);
@@ -148,9 +151,14 @@ public class ReceiptPage implements ActionListener{
             }
 
             //Created the receipt
+            int dbId = DatabaseService.getInstance().insertReceipt(currentUser, name, date, itemList);
+            if (dbId == -1) {
+                messageLabel.setText("Database error. Receipt not saved.");
+                return;
+            }
+            // Then create in memory with the real DB id
             Receipt receipt = receiptService.createReceipt(currentUser, new ArrayList<>(), name, date);
-            
-            //Add items to receipt
+            receipt.setReceiptID(dbId);
             for (Item item : itemList){
                 receiptService.addItemToReceipt(receipt, item);
             }
