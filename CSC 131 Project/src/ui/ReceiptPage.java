@@ -55,7 +55,12 @@ public class ReceiptPage implements ActionListener{
         frame.add(top, BorderLayout.NORTH);
         frame.add(new JScrollPane(listPanel), BorderLayout.CENTER);
         frame.add(bottom, BorderLayout.SOUTH);
-        allReceipts = UserInfo.getInstance().getAllReceipts();
+        allReceipts = new ArrayList<>();
+        for (Receipt r : UserInfo.getInstance().getAllReceipts()) {
+            if (r.getOwner().getUserID() == currentUser.getUserID()) {
+                allReceipts.add(r);
+            }
+        }
         refreshList(allReceipts);
         frame.setVisible(true);
     }
@@ -169,6 +174,8 @@ public class ReceiptPage implements ActionListener{
             }
             
             UserInfo.getInstance().getAllReceipts().add(0, receipt);
+            allReceipts.add(0, receipt);
+
             
             //Adds new receipt on top
             refreshList(allReceipts);
