@@ -55,6 +55,8 @@ public class ReceiptPage implements ActionListener{
         frame.add(top, BorderLayout.NORTH);
         frame.add(new JScrollPane(listPanel), BorderLayout.CENTER);
         frame.add(bottom, BorderLayout.SOUTH);
+        allReceipts = UserInfo.getInstance().getAllReceipts();
+        refreshList(allReceipts);
         frame.setVisible(true);
     }
 
@@ -166,8 +168,9 @@ public class ReceiptPage implements ActionListener{
                 receiptService.addItemToReceipt(receipt, item);
             }
             
+            UserInfo.getInstance().getAllReceipts().add(0, receipt);
+            
             //Adds new receipt on top
-            allReceipts.add(0, receipt);
             refreshList(allReceipts);
             dialog.dispose();
         });

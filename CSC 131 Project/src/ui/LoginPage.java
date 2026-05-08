@@ -1,5 +1,5 @@
 package ui;
-import java.awt.Color;
+import java.awt.Color; 
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -9,9 +9,11 @@ import javax.swing.JButton;
 import javax.swing.JTextField;
 import javax.swing.JPasswordField;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 
 import model.User;
-
+import model.Item;
+import model.Receipt;
 
 public class LoginPage implements ActionListener{
 	
@@ -22,6 +24,7 @@ public class LoginPage implements ActionListener{
 	JPasswordField userPassword = new JPasswordField();
 	JLabel userIDLabel = new JLabel("Email/Username:");
 	JLabel userPasswordLabel = new JLabel("Password:");
+	JButton searchButton = new JButton("Search For Receipt Without Logging In");
 	JLabel messageLabel = new JLabel();
 	HashMap<String,User> loginInfo = new HashMap<String,User>();
 	
@@ -39,6 +42,11 @@ public class LoginPage implements ActionListener{
         messageLabel.setFont(new Font("Arial", Font.BOLD, 14));
 		registerButton.setBounds(110, 310, 120, 35);
 		registerButton.addActionListener(this);
+		
+		//Search receipt in login page
+		searchButton.setBounds(80, 480, 340, 35);
+		searchButton.addActionListener(this);
+		frame.add(searchButton);
 		
 		//Buttons added onto frame
 		frame.add(registerButton);
@@ -70,6 +78,12 @@ public class LoginPage implements ActionListener{
 	                break;
 	            }
 	        }
+	        
+	        if (userID.isEmpty() || password.isEmpty()) {
+	            messageLabel.setForeground(Color.RED);
+	            messageLabel.setText("All fields are required.");
+	            return;
+	        }
 
 	        if (matchedUser != null){
 	            messageLabel.setForeground(Color.GREEN);
@@ -85,6 +99,41 @@ public class LoginPage implements ActionListener{
 	    if (e.getSource() == registerButton){
 	        frame.dispose();
 	        new RegisterPage(loginInfo);
+	    }
+	    
+	    if (e.getSource() == searchButton) {
+	        String id = JOptionPane.showInputDialog(frame, "Enter Receipt ID:");
+	        if (id == null || id.trim().isEmpty()) {
+	        	return;
+	        }
+
+	        try {
+	            int receiptID = Integer.parseInt(id.trim());
+	            Receipt found = null;
+
+	            for (Receipt receipt : UserInfo.getInstance().getAllReceipts()) {
+	                if (receipt.getReceiptID() == receiptID) {
+	                    found = receipt;
+	                    break;
+	                }
+	            }
+
+	            if (found != null) {
+	                StringBuilder sb = new StringBuilder();
+	                sb.append("Receipt: ").append(found.getName()).append("\n");
+	                sb.append("Date: ").append(found.getDate()).append("\n");
+	                sb.append("Items:\n");
+	                for (Item item : found.getItems()) {
+	                	sb.append(item.getName()).append(" x").append(item.getCount()).append(" - $").append(String.format("%.2f", item.getPrice() * item.getCount())).append("\n");
+	                }
+	                sb.append("Total: $").append(String.format("%.2f", found.itemSum()));
+	                JOptionPane.showMessageDialog(frame, sb.toString(), "Receipt #" + receiptID, JOptionPane.INFORMATION_MESSAGE);
+	            } else {
+	                JOptionPane.showMessageDialog(frame, "Receipt not found.", "Error", JOptionPane.ERROR_MESSAGE);
+	            }
+	        } catch (NumberFormatException ex) {
+	            JOptionPane.showMessageDialog(frame, "Invalid receipt ID.", "Error", JOptionPane.ERROR_MESSAGE);
+	        }
 	    }
 		
 	}
