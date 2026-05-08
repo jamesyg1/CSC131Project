@@ -13,20 +13,28 @@ import model.Item;
 
 class ItemTest {
 
-	@Test
-	void testItemCreation() {		
-		String input = "Hotdog" + System.lineSeparator() 
-					 + 3 + System.lineSeparator()
-					 + 3.99;
-		
-	    InputStream in = new ByteArrayInputStream(input.getBytes());
-	    System.setIn(in);
+    @Test
+    void testItemCreation() {
+        String input = "Hotdog" + System.lineSeparator()
+                     + 3 + System.lineSeparator()
+                     + 3.99;
 
-		Item item = Item.inputItem();
+        InputStream in = new ByteArrayInputStream(input.getBytes());
+        System.setIn(in);
 
-		assertEquals("Hotdog", item.getName());
+        Item item = Item.inputItem();
+
+        assertEquals("Hotdog", item.getName());
         assertEquals(3, item.getCount());
         assertEquals(3.99, item.getPrice());
-	}
+    }
 
+    @Test
+    void testItemConstructorAndGetters() {
+        Item item = new Item("Apple", 2, 1.99);
+
+        assertEquals("Apple", item.getName());
+        assertEquals(2, item.getCount());
+        assertEquals(1.99, item.getPrice());
+    }
 }

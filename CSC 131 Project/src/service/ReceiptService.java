@@ -11,15 +11,9 @@ import model.User;
 public class ReceiptService {
 
     private List<Receipt> receipts;
-    private Random random;
 
     public ReceiptService() {
         receipts = new ArrayList<>();
-        random = new Random();
-    }
-
-    private int generateReceiptID() {
-        return 100000 + random.nextInt(900000);
     }
 
     public Receipt createReceipt(User owner, List<Item> items, String name, String date) {
