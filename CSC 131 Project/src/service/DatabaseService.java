@@ -1,4 +1,5 @@
 package service;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,8 +26,6 @@ public class DatabaseService {
         return instance;
     }
 
-    // Connection
-
     private static final String DB_URL = "jdbc:sqlite:app.db";
     private Connection conn;
 
@@ -36,7 +35,7 @@ public class DatabaseService {
             System.out.println("Database connection has been made: " + DB_URL);
             initTables();
         } catch (SQLException e) {
-            System.err.println("Failed to connect to database check error message: " + e.getMessage());
+            System.err.println("Failed to connect to database: " + e.getMessage());
         }
     }
 
@@ -77,7 +76,7 @@ public class DatabaseService {
         System.out.println("Tables initialised.");
     }
 
-    // New user method retun -1 if it fails
+    // Insert new user, returns -1 if it fails
     public int insertUser(String name, String email, String password) {
         String sql = "INSERT INTO users (name, email, password) VALUES (?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -93,7 +92,7 @@ public class DatabaseService {
         return -1;
     }
 
-    //This loads the user into the hashmap adding onto our hashmap idea
+    // Load all users into HashMap
     public HashMap<String, User> loadAllUsers() {
         HashMap<String, User> map = new HashMap<>();
         String sql = "SELECT id, name, email, password FROM users";
@@ -112,7 +111,7 @@ public class DatabaseService {
         return map;
     }
 
-    //Duplicate user name checker
+    // Duplicate username checker
     public boolean usernameExists(String name) {
         String sql = "SELECT 1 FROM users WHERE name = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -125,8 +124,7 @@ public class DatabaseService {
         return false;
     }
 
-  //Receipt operation
-
+    // Insert receipt and its items
     public int insertReceipt(User owner, String name, String date, List<Item> items) {
         String sql = "INSERT INTO receipts (user_id, name, date) VALUES (?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -148,7 +146,7 @@ public class DatabaseService {
         return -1;
     }
 
-      //Insert a single item into an existing receipt.
+    // Insert a single item into a receipt
     public void insertItem(int receiptId, Item item) {
         String sql = "INSERT INTO items (receipt_id, name, count, price) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -162,7 +160,7 @@ public class DatabaseService {
         }
     }
 
-     //Load all receipts that belong to the user inc their items
+    // Load all receipts for a user including their items
     public List<Receipt> loadReceiptsForUser(User user) {
         List<Receipt> list = new ArrayList<>();
         String sql = "SELECT id, name, date FROM receipts WHERE user_id = ? ORDER BY id DESC";
@@ -173,10 +171,8 @@ public class DatabaseService {
                 int    dbId = rs.getInt("id");
                 String name = rs.getString("name");
                 String date = rs.getString("date");
-
                 List<Item> items = loadItemsForReceipt(dbId);
                 Receipt receipt = new Receipt(user, items, 0.0, name, date);
-                // Override the random receiptID with the DB primary key so it is stable
                 receipt.setReceiptID(dbId);
                 list.add(receipt);
             }
@@ -184,6 +180,31 @@ public class DatabaseService {
             System.err.println("loadReceiptsForUser failed: " + e.getMessage());
         }
         return list;
+    }
+
+    // Load a single receipt by ID (used by SearchPage)
+    public Receipt loadReceiptByID(int receiptId) {
+        String sql = "SELECT r.id, r.name, r.date, u.id as uid, u.name as uname, u.email, u.password " +
+                "FROM receipts r JOIN users u ON r.user_id = u.id WHERE r.id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, receiptId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                User owner = UserFactory.createUser(
+                        rs.getInt("uid"),
+                        rs.getString("email"),
+                        rs.getString("password"),
+                        rs.getString("uname")
+                );
+                List<Item> items = loadItemsForReceipt(receiptId);
+                Receipt receipt = new Receipt(owner, items, 0.0, rs.getString("name"), rs.getString("date"));
+                receipt.setReceiptID(receiptId);
+                return receipt;
+            }
+        } catch (SQLException e) {
+            System.err.println("loadReceiptByID failed: " + e.getMessage());
+        }
+        return null;
     }
 
     private List<Item> loadItemsForReceipt(int receiptId) {
@@ -201,7 +222,7 @@ public class DatabaseService {
         return items;
     }
 
-    //Receipt deletion method
+    // Delete a receipt and its items
     public void deleteReceipt(int receiptId) {
         try (PreparedStatement ps1 = conn.prepareStatement("DELETE FROM items WHERE receipt_id = ?");
              PreparedStatement ps2 = conn.prepareStatement("DELETE FROM receipts WHERE id = ?")) {
@@ -214,7 +235,6 @@ public class DatabaseService {
         }
     }
 
-        // Error checker
     public void close() {
         try {
             if (conn != null && !conn.isClosed()) conn.close();
