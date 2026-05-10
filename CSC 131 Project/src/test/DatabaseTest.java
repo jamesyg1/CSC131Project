@@ -7,7 +7,7 @@ import java.sql.ResultSet;
 
 public class DatabaseTest {
     public static void main(String[] args) {
-        String url = "jdbc:sqlite:test.db";
+        String url = "jdbc:sqlite:receipt.db";
 
         try (Connection conn = DriverManager.getConnection(url)) {
             System.out.println("Test Connection Sucessful");
