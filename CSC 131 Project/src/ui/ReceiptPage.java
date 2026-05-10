@@ -4,6 +4,7 @@ import model.User;
 import model.Item;
 import model.Receipt;
 import service.ReceiptService;
+import service.DatabaseService;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -12,29 +13,32 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
-import service.DatabaseService;
 
-public class ReceiptPage implements ActionListener{
+public class ReceiptPage implements ActionListener {
 
     JFrame frame = new JFrame();
     JTextField searchField = new JTextField();
     JButton searchButton = new JButton("Search");
     JButton addButton = new JButton("+ Add Receipt");
+    JButton logoutButton = new JButton("Logout");
     JPanel listPanel = new JPanel();
     ReceiptService receiptService = new ReceiptService();
     List<Receipt> allReceipts = new ArrayList<>();
     User currentUser;
 
-    ReceiptPage(User user){
+    ReceiptPage(User user) {
         this.currentUser = user;
+
+        // Load from DB on open
         allReceipts = DatabaseService.getInstance().loadReceiptsForUser(user);
-        refreshList(allReceipts);
 
         searchButton.addActionListener(this);
         addButton.addActionListener(this);
+        logoutButton.addActionListener(this);
 
         JPanel top = new JPanel(new BorderLayout(5, 5));
         top.setBorder(new EmptyBorder(10, 10, 10, 10));
+        top.add(logoutButton, BorderLayout.WEST);
         top.add(searchField, BorderLayout.CENTER);
         top.add(searchButton, BorderLayout.EAST);
 
@@ -46,41 +50,47 @@ public class ReceiptPage implements ActionListener{
         bottom.add(addButton);
 
         frame.setTitle("Receipts - " + user.getName());
-        frame.setSize(500, 600);
+        frame.setSize(500, 650);
         frame.setLayout(new BorderLayout());
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.add(top, BorderLayout.NORTH);
         frame.add(new JScrollPane(listPanel), BorderLayout.CENTER);
         frame.add(bottom, BorderLayout.SOUTH);
         frame.setVisible(true);
+
+        refreshList(allReceipts);
     }
 
     @Override
-    public void actionPerformed(ActionEvent e){
-    	
-    	if (e.getSource() == addButton){
+    public void actionPerformed(ActionEvent e) {
+
+        if (e.getSource() == addButton) {
             showAddDialog();
         }
-    	
-    	if (e.getSource() == searchButton){
-    	    String query = searchField.getText().trim().toLowerCase();
-    	    if (query.isEmpty()){
-    	        refreshList(allReceipts);
-    	        return;
-    	    }
-    	    List<Receipt> filtered = new ArrayList<>();
-    	    for (Receipt r : allReceipts) {
-    	        if (r.getName().toLowerCase().contains(query) ||
-    	            String.valueOf(r.getReceiptID()).contains(query)){
-    	            filtered.add(r);
-    	        }
-    	    }
-    	    refreshList(filtered);
-    	}
-    	
+
+        if (e.getSource() == searchButton) {
+            String query = searchField.getText().trim().toLowerCase();
+            if (query.isEmpty()) {
+                refreshList(allReceipts);
+                return;
+            }
+            List<Receipt> filtered = new ArrayList<>();
+            for (Receipt r : allReceipts) {
+                if (r.getName().toLowerCase().contains(query) ||
+                        formatID(r.getReceiptID()).contains(query)) {
+                    filtered.add(r);
+                }
+            }
+            refreshList(filtered);
+        }
+
+        if (e.getSource() == logoutButton) {
+            frame.dispose();
+            new LoginPage(UserInfo.getInstance().getLoginInfo());
+        }
     }
-    
-    void showAddDialog(){
+
+    void showAddDialog() {
 
         JDialog dialog = new JDialog(frame, "New Receipt", true);
         dialog.setSize(380, 420);
@@ -96,7 +106,6 @@ public class ReceiptPage implements ActionListener{
         JLabel messageLabel = new JLabel();
         JButton submitButton = new JButton("Create Receipt");
 
-        //Layouts
         nameLabel.setBounds(20, 20, 200, 25);
         nameField.setBounds(20, 45, 330, 25);
         dateLabel.setBounds(20, 80, 200, 25);
@@ -104,12 +113,11 @@ public class ReceiptPage implements ActionListener{
         itemsLabel.setBounds(20, 140, 200, 25);
         itemsArea.setBounds(20, 165, 330, 120);
         messageLabel.setBounds(20, 295, 330, 25);
-        submitButton.setBounds(120, 330, 150, 30);
+        submitButton.setBounds(115, 330, 150, 30);
 
         messageLabel.setForeground(Color.RED);
         itemsArea.setBorder(BorderFactory.createLineBorder(Color.GRAY));
 
-        //Add components to dialog
         dialog.add(nameLabel);
         dialog.add(nameField);
         dialog.add(dateLabel);
@@ -118,108 +126,116 @@ public class ReceiptPage implements ActionListener{
         dialog.add(itemsArea);
         dialog.add(messageLabel);
         dialog.add(submitButton);
-        
-        //When creating receipting button is clicked
+
         submitButton.addActionListener(e -> {
             String name = nameField.getText().trim();
             String date = dateField.getText().trim();
             String itemsText = itemsArea.getText().trim();
 
-            //Checks for empty fields
-            if (name.isEmpty() || date.isEmpty() || itemsText.isEmpty()){
+            if (name.isEmpty() || date.isEmpty() || itemsText.isEmpty()) {
                 messageLabel.setText("All fields are required.");
                 return;
             }
 
-            //Parse items and validate each line
             List<Item> itemList = new ArrayList<>();
-            for (String line : itemsText.split("\n")) {
+            // Windows line ending fix
+            for (String line : itemsText.split("\\r?\\n")) {
                 String[] parts = line.split(",");
                 if (parts.length != 3) {
-                    messageLabel.setText("Invalid format " + line.trim());
+                    messageLabel.setText("Invalid format: " + line.trim());
                     return;
                 }
-                
-                //Converts the values to proper type
-                try{
-                    itemList.add(new Item(parts[0].trim(), Integer.parseInt(parts[1].trim()), Double.parseDouble(parts[2].trim())));
-                //Error message if conversion fails
+                try {
+                    itemList.add(new Item(
+                            parts[0].trim(),
+                            Integer.parseInt(parts[1].trim()),
+                            Double.parseDouble(parts[2].trim())
+                    ));
                 } catch (NumberFormatException ex) {
-                    messageLabel.setText("Invalid number in " + line.trim());
+                    messageLabel.setText("Invalid number in: " + line.trim());
                     return;
                 }
             }
 
-            //Created the receipt
+            // Save to DB first
             int dbId = DatabaseService.getInstance().insertReceipt(currentUser, name, date, itemList);
             if (dbId == -1) {
                 messageLabel.setText("Database error. Receipt not saved.");
                 return;
             }
-            // Then create in memory with the real DB id
+
+            // Create in memory with real DB id
             Receipt receipt = receiptService.createReceipt(currentUser, new ArrayList<>(), name, date);
             receipt.setReceiptID(dbId);
-            for (Item item : itemList){
+            for (Item item : itemList) {
                 receiptService.addItemToReceipt(receipt, item);
             }
-            
-            //Adds new receipt on top
+
             allReceipts.add(0, receipt);
             refreshList(allReceipts);
             dialog.dispose();
         });
-        
-        dialog.setVisible(true);
 
+        dialog.setVisible(true);
     }
-    
-    
-    /* Refreshes page when searching or adding receipts */
-    void refreshList(List<Receipt> receipts){
+
+    // Formats the DB id as a 5-digit zero-padded string e.g. 00001
+    private String formatID(int id) {
+        return String.format("%05d", id);
+    }
+
+    void refreshList(List<Receipt> receipts) {
 
         listPanel.removeAll();
 
-        for (Receipt r : receipts){
+        for (Receipt r : receipts) {
 
-        	//Creates a card for each receipt
+            int cardHeight = 50 + (r.getItems().size() * 18);
+
             JPanel card = new JPanel();
             card.setLayout(null);
             card.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
-            card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
+            card.setMaximumSize(new Dimension(Integer.MAX_VALUE, cardHeight));
+            card.setPreferredSize(new Dimension(460, cardHeight));
             card.setBackground(Color.WHITE);
 
-            //Labels for receipt
+            // Receipt name bold
             JLabel titleLabel = new JLabel(r.getName());
-            JLabel subLabel = new JLabel("ID: " + r.getReceiptID() + "  |  " + r.getDate() + "  |  $" + String.format("%.2f", r.itemSum()));
-
-            //Add item summary to receipt
-            String itemNames = "";
-            for (Item item : r.getItems()){
-                itemNames += item.getName() + " x" + item.getCount() + "  ";
-            }
-            JLabel itemsLabel = new JLabel("Items: " + itemNames);
-
-            //Layout
             titleLabel.setBounds(10, 5, 400, 20);
-            subLabel.setBounds(10, 28, 400, 20);
-            itemsLabel.setBounds(10, 51, 400, 20);
-
             titleLabel.setFont(new Font(null, Font.BOLD, 14));
+
+            // ID | Date | Total
+            JLabel subLabel = new JLabel(
+                    "ID: " + formatID(r.getReceiptID()) +
+                            "  |  " + r.getDate() +
+                            "  |  Total: $" + String.format("%.2f", r.itemSum())
+            );
+            subLabel.setBounds(10, 26, 450, 18);
             subLabel.setFont(new Font(null, Font.PLAIN, 11));
             subLabel.setForeground(Color.GRAY);
-            itemsLabel.setFont(new Font(null, Font.PLAIN, 11));
-            itemsLabel.setForeground(Color.GRAY);
 
-            //Add components to card
             card.add(titleLabel);
             card.add(subLabel);
-            card.add(itemsLabel);
-            //Add card to list panel
+
+            // Each item on its own line
+            int yPos = 46;
+            for (Item item : r.getItems()) {
+                JLabel itemLabel = new JLabel(
+                        "  • " + item.getName() +
+                                "   x" + item.getCount() +
+                                "   $" + String.format("%.2f", item.getPrice())
+                );
+                itemLabel.setBounds(10, yPos, 440, 16);
+                itemLabel.setFont(new Font(null, Font.PLAIN, 11));
+                itemLabel.setForeground(new Color(80, 80, 80));
+                card.add(itemLabel);
+                yPos += 18;
+            }
+
             listPanel.add(card);
-            listPanel.add(Box.createVerticalStrut(5));
+            listPanel.add(Box.createVerticalStrut(6));
         }
 
-        //Updates the UI
         listPanel.revalidate();
         listPanel.repaint();
     }
