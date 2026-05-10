@@ -34,6 +34,10 @@ public class Receipt {
 	public int getReceiptID() {
 		return receiptID;
 	}
+	// DatabaseService connection to the Receipt
+	public void setReceiptID(int id) {
+		this.receiptID = id;
+	}
 	public User getOwner() {
 		return owner;
 	}
@@ -50,13 +54,14 @@ public class Receipt {
 		}
 		return sum;
 	}
-	
+
 	public String getName() {
 		return name;
 	}
-	
+
 	public String getDate() {
 		return date;
 	}
-	
+
 }
+

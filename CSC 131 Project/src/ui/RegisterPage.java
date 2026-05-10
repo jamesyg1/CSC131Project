@@ -13,6 +13,7 @@ import java.awt.Font;
 
 import model.User;
 import model.UserFactory;
+import service.DatabaseService;
 
 public class RegisterPage implements ActionListener {
 
@@ -111,7 +112,12 @@ public class RegisterPage implements ActionListener {
             }
             
             //Redirects to login page after account is created
-            int newID = loginInfo.size() + 1;
+            int newID = DatabaseService.getInstance().insertUser(name, email, password);
+            if (newID == -1) {
+                messageLabel.setForeground(Color.RED);
+                messageLabel.setText("Database error. Please try again.");
+                return;
+            }
             loginInfo.put(name, UserFactory.createUser(newID, email, password, name));
             messageLabel.setForeground(Color.GREEN);
             messageLabel.setText("Registration successful!");
