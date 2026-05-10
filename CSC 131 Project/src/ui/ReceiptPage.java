@@ -29,7 +29,6 @@ public class ReceiptPage implements ActionListener {
     ReceiptPage(User user) {
         this.currentUser = user;
 
-        // Load from DB on open
         allReceipts = DatabaseService.getInstance().loadReceiptsForUser(user);
 
         searchButton.addActionListener(this);
@@ -77,7 +76,7 @@ public class ReceiptPage implements ActionListener {
             List<Receipt> filtered = new ArrayList<>();
             for (Receipt r : allReceipts) {
                 if (r.getName().toLowerCase().contains(query) ||
-                        formatID(r.getReceiptID()).contains(query)) {
+                        String.valueOf(r.getReceiptID()).contains(query)) {
                     filtered.add(r);
                 }
             }
@@ -138,7 +137,6 @@ public class ReceiptPage implements ActionListener {
             }
 
             List<Item> itemList = new ArrayList<>();
-            // Windows line ending fix
             for (String line : itemsText.split("\\r?\\n")) {
                 String[] parts = line.split(",");
                 if (parts.length != 3) {
@@ -157,16 +155,14 @@ public class ReceiptPage implements ActionListener {
                 }
             }
 
-            // Save to DB first
-            int dbId = DatabaseService.getInstance().insertReceipt(currentUser, name, date, itemList);
-            if (dbId == -1) {
+            int code = DatabaseService.getInstance().insertReceipt(currentUser, name, date, itemList);
+            if (code == -1) {
                 messageLabel.setText("Database error. Receipt not saved.");
                 return;
             }
 
-            // Create in memory with real DB id
             Receipt receipt = receiptService.createReceipt(currentUser, new ArrayList<>(), name, date);
-            receipt.setReceiptID(dbId);
+            receipt.setReceiptID(code);
             for (Item item : itemList) {
                 receiptService.addItemToReceipt(receipt, item);
             }
@@ -177,11 +173,6 @@ public class ReceiptPage implements ActionListener {
         });
 
         dialog.setVisible(true);
-    }
-
-    // Formats the DB id as a 5-digit zero-padded string e.g. 00001
-    private String formatID(int id) {
-        return String.format("%05d", id);
     }
 
     void refreshList(List<Receipt> receipts) {
@@ -199,14 +190,12 @@ public class ReceiptPage implements ActionListener {
             card.setPreferredSize(new Dimension(460, cardHeight));
             card.setBackground(Color.WHITE);
 
-            // Receipt name bold
             JLabel titleLabel = new JLabel(r.getName());
             titleLabel.setBounds(10, 5, 400, 20);
             titleLabel.setFont(new Font(null, Font.BOLD, 14));
 
-            // ID | Date | Total
             JLabel subLabel = new JLabel(
-                    "ID: " + formatID(r.getReceiptID()) +
+                    "ID: " + r.getReceiptID() +
                             "  |  " + r.getDate() +
                             "  |  Total: $" + String.format("%.2f", r.itemSum())
             );
@@ -217,7 +206,6 @@ public class ReceiptPage implements ActionListener {
             card.add(titleLabel);
             card.add(subLabel);
 
-            // Each item on its own line
             int yPos = 46;
             for (Item item : r.getItems()) {
                 JLabel itemLabel = new JLabel(

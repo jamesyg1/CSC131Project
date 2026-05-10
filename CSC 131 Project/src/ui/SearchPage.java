@@ -26,7 +26,7 @@ public class SearchPage implements ActionListener {
         title.setFont(new Font(null, Font.BOLD, 18));
         title.setHorizontalAlignment(SwingConstants.CENTER);
 
-        JLabel hint = new JLabel("Enter a 5-digit Receipt ID:");
+        JLabel hint = new JLabel("Enter your 6-digit Receipt ID:");
         hint.setFont(new Font(null, Font.PLAIN, 13));
 
         JPanel top = new JPanel();
@@ -77,17 +77,17 @@ public class SearchPage implements ActionListener {
                 return;
             }
 
-            int id;
+            int code;
             try {
-                id = Integer.parseInt(input);
+                code = Integer.parseInt(input);
             } catch (NumberFormatException ex) {
                 showMessage("Receipt ID must be a number.", Color.RED);
                 return;
             }
 
-            Receipt found = DatabaseService.getInstance().loadReceiptByID(id);
+            Receipt found = DatabaseService.getInstance().loadReceiptByID(code);
             if (found == null) {
-                showMessage("No receipt found with ID: " + String.format("%05d", id), Color.RED);
+                showMessage("No receipt found with ID: " + input, Color.RED);
                 return;
             }
 
@@ -113,7 +113,7 @@ public class SearchPage implements ActionListener {
         nameLabel.setFont(new Font(null, Font.BOLD, 16));
         nameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel idLabel = new JLabel("ID: " + String.format("%05d", r.getReceiptID()));
+        JLabel idLabel = new JLabel("ID: " + r.getReceiptID());
         idLabel.setFont(new Font(null, Font.PLAIN, 12));
         idLabel.setForeground(Color.GRAY);
         idLabel.setAlignmentX(Component.CENTER_ALIGNMENT);

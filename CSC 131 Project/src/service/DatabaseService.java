@@ -12,7 +12,7 @@ import model.UserFactory;
 /*
  * Tables created on first run:
  *   users   (id, name, email, password)
- *   receipts(id, user_id, name, date)
+ *   receipts(id, receipt_code, user_id, name, date)
  *   items   (id, receipt_id, name, count, price)
  */
 public class DatabaseService {
@@ -26,7 +26,7 @@ public class DatabaseService {
         return instance;
     }
 
-    private static final String DB_URL = "jdbc:sqlite:app.db";
+    private static final String DB_URL = "jdbc:sqlite:receipt.db";
     private Connection conn;
 
     private DatabaseService() {
@@ -53,10 +53,11 @@ public class DatabaseService {
 
         stmt.execute("""
             CREATE TABLE IF NOT EXISTS receipts (
-                id      INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                name    TEXT    NOT NULL,
-                date    TEXT    NOT NULL,
+                id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                receipt_code INTEGER NOT NULL UNIQUE,
+                user_id      INTEGER NOT NULL,
+                name         TEXT    NOT NULL,
+                date         TEXT    NOT NULL,
                 FOREIGN KEY (user_id) REFERENCES users(id)
             )
         """);
@@ -124,13 +125,35 @@ public class DatabaseService {
         return false;
     }
 
-    // Insert receipt and its items
+    // Generates a random 6-digit code that doesn't already exist in the DB
+    private int generateUniqueCode() {
+        java.util.Random rand = new java.util.Random();
+        int code;
+        do {
+            code = 100000 + rand.nextInt(900000);
+        } while (codeExists(code));
+        return code;
+    }
+
+    private boolean codeExists(int code) {
+        String sql = "SELECT 1 FROM receipts WHERE receipt_code = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, code);
+            return ps.executeQuery().next();
+        } catch (SQLException e) {
+            return false;
+        }
+    }
+
+    // Insert receipt and its items, returns the random 6-digit code
     public int insertReceipt(User owner, String name, String date, List<Item> items) {
-        String sql = "INSERT INTO receipts (user_id, name, date) VALUES (?, ?, ?)";
+        int code = generateUniqueCode();
+        String sql = "INSERT INTO receipts (receipt_code, user_id, name, date) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setInt(1, owner.getUserID());
-            ps.setString(2, name);
-            ps.setString(3, date);
+            ps.setInt(1, code);
+            ps.setInt(2, owner.getUserID());
+            ps.setString(3, name);
+            ps.setString(4, date);
             ps.executeUpdate();
             ResultSet keys = ps.getGeneratedKeys();
             if (keys.next()) {
@@ -138,7 +161,7 @@ public class DatabaseService {
                 for (Item item : items) {
                     insertItem(receiptId, item);
                 }
-                return receiptId;
+                return code; // return the random code not the db id
             }
         } catch (SQLException e) {
             System.err.println("insertReceipt failed: " + e.getMessage());
@@ -163,17 +186,18 @@ public class DatabaseService {
     // Load all receipts for a user including their items
     public List<Receipt> loadReceiptsForUser(User user) {
         List<Receipt> list = new ArrayList<>();
-        String sql = "SELECT id, name, date FROM receipts WHERE user_id = ? ORDER BY id DESC";
+        String sql = "SELECT id, receipt_code, name, date FROM receipts WHERE user_id = ? ORDER BY id DESC";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, user.getUserID());
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 int    dbId = rs.getInt("id");
+                int    code = rs.getInt("receipt_code");
                 String name = rs.getString("name");
                 String date = rs.getString("date");
                 List<Item> items = loadItemsForReceipt(dbId);
                 Receipt receipt = new Receipt(user, items, 0.0, name, date);
-                receipt.setReceiptID(dbId);
+                receipt.setReceiptID(code); // show the random code not db id
                 list.add(receipt);
             }
         } catch (SQLException e) {
@@ -182,12 +206,12 @@ public class DatabaseService {
         return list;
     }
 
-    // Load a single receipt by ID (used by SearchPage)
-    public Receipt loadReceiptByID(int receiptId) {
-        String sql = "SELECT r.id, r.name, r.date, u.id as uid, u.name as uname, u.email, u.password " +
-                "FROM receipts r JOIN users u ON r.user_id = u.id WHERE r.id = ?";
+    // Load a single receipt by its 6-digit code (used by SearchPage)
+    public Receipt loadReceiptByID(int code) {
+        String sql = "SELECT r.id, r.receipt_code, r.name, r.date, u.id as uid, u.name as uname, u.email, u.password " +
+                "FROM receipts r JOIN users u ON r.user_id = u.id WHERE r.receipt_code = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, receiptId);
+            ps.setInt(1, code);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 User owner = UserFactory.createUser(
@@ -196,9 +220,9 @@ public class DatabaseService {
                         rs.getString("password"),
                         rs.getString("uname")
                 );
-                List<Item> items = loadItemsForReceipt(receiptId);
+                List<Item> items = loadItemsForReceipt(rs.getInt("id"));
                 Receipt receipt = new Receipt(owner, items, 0.0, rs.getString("name"), rs.getString("date"));
-                receipt.setReceiptID(receiptId);
+                receipt.setReceiptID(rs.getInt("receipt_code"));
                 return receipt;
             }
         } catch (SQLException e) {
