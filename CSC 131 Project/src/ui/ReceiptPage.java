@@ -1,6 +1,6 @@
 package ui;
 
-import model.User; 
+import model.User;
 import model.Item;
 import model.Receipt;
 import service.ReceiptService;
@@ -10,7 +10,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;	
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,10 +47,6 @@ public class ReceiptPage implements ActionListener {
         bottom.setBorder(new EmptyBorder(5, 10, 5, 10));
         addButton.setPreferredSize(new Dimension(460, 40));
         bottom.add(addButton);
-        
-        logoutButton.setPreferredSize(new Dimension(90, 30));
-        logoutButton.addActionListener(this);
-        top.add(logoutButton, BorderLayout.WEST);
 
         frame.setTitle("Receipts - " + user.getName());
         frame.setSize(500, 650);
@@ -59,13 +55,6 @@ public class ReceiptPage implements ActionListener {
         frame.add(top, BorderLayout.NORTH);
         frame.add(new JScrollPane(listPanel), BorderLayout.CENTER);
         frame.add(bottom, BorderLayout.SOUTH);
-        allReceipts = new ArrayList<>();
-        for (Receipt r : UserInfo.getInstance().getAllReceipts()) {
-            if (r.getOwner().getUserID() == currentUser.getUserID()) {
-                allReceipts.add(r);
-            }
-        }
-        refreshList(allReceipts);
         frame.setVisible(true);
 
         refreshList(allReceipts);
@@ -179,9 +168,6 @@ public class ReceiptPage implements ActionListener {
             }
 
             allReceipts.add(0, receipt);
-
-            
-            //Adds new receipt on top
             refreshList(allReceipts);
             dialog.dispose();
         });

@@ -13,10 +13,6 @@ public class UserInfo {
 		loginInfo = DatabaseService.getInstance().loadAllUsers();
 		System.out.println("UserInfo loaded " + loginInfo.size() + " user(s) from database.");
 	}
-	
-	public List<Receipt> getAllReceipts() {
-	    return allReceipts;
-	}
 
 	public static UserInfo getInstance() {
 		if (instance == null) {
